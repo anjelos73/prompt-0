@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS noise
+.DS_Store
+desktop.ini
+
+# Working / temporary files
+*.pyc
+__pycache__/
+*.tmp
+*.bak
+
+# Node (if added later)
+node_modules/
