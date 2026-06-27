@@ -61,6 +61,7 @@ body::before {
   flex-direction: column;
   animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
+  height: 100%;
 }
 
 .slide.active { display: flex; }
@@ -186,7 +187,8 @@ button:focus-visible {
   box-shadow: 0 8px 30px rgba(34,34,34,0.30);
   transition: transform 0.3s, box-shadow 0.3s;
   position: relative;
-  overflow: hidden;
+  height: auto;
+  min-height: min-content;
 }
 
 .card::before {
@@ -229,6 +231,25 @@ button:focus-visible {
 .card ul {
   list-style: none;
   padding-left: 0;
+}
+
+/* Sotto-liste annidate (usate in Consigli Pratici) */
+.card ul ul {
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-left: 22px;
+}
+
+.card ul ul li {
+  padding-left: 18px;
+  margin-bottom: 6px;
+  font-size: calc(15px * var(--font-scale)) !important;
+}
+
+.card ul ul li::before {
+  content: "◦";
+  color: var(--menta);
+  opacity: 0.7;
 }
 
 .card li {
@@ -356,6 +377,7 @@ button:focus-visible {
   border-radius: 12px;
   padding: 20px;
   transition: all 0.3s;
+  height: auto;
 }
 
 .example-card:hover {
@@ -758,7 +780,7 @@ button:focus-visible {
   <div class="author">📚 Dott. Angelo Spanu · @2026</div>
 </div>
 
-<div class="slide" data-idx="2" role="region" aria-label="Slide 2 di 55" tabindex="0">
+<div class="slide" data-idx="2" role="region" aria-label="Slide 2 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">🗂️ INDICE</span>
     <h1 id="slide-title-2">Cosa vedremo insieme</h1>
@@ -825,7 +847,7 @@ button:focus-visible {
   </div>
 </div>
 
-<div class="slide" data-idx="3" role="region" aria-label="Slide 3 di 55" tabindex="0">
+<div class="slide" data-idx="3" role="region" aria-label="Slide 3 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">📘 INTRO</span>
     <h1 id="slide-title-3">Introduzione al Corso</h1>
@@ -839,13 +861,13 @@ button:focus-visible {
       Come un videogioco a livelli: ogni capitolo aggiunge una piccola abilità.
     </p>
   </div>
-  <div class="card">
+    <div class="card">
     <div class="card-title"><span class="card-icon">💡</span> Cosa ti serve</div>
-    <ul><li>l&#x27;obiettivo reale qui non è &quot;imparare a scrivere prompt&quot;, ma imparare a parlare bene</li><li>con un&#x27;AI per ottenere quello che vuoi. Quindi costruisco esercizi progressivi, come un</li><li>videogioco a livelli.</li></ul>
+    <ul><li>Un account su un'AI (come ChatGPT, Claude o Gemini)</li><li>Un dispositivo connesso a internet</li><li>La curiosità di sperimentare e sbagliare per imparare</li></ul>
   </div>
 </div>
 
-<div class="slide" data-idx="4" role="region" aria-label="Slide 4 di 55" tabindex="0">
+<div class="slide" data-idx="4" role="region" aria-label="Slide 4 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 0</span>
     <h1 id="slide-title-4">Cos&#x27;è un prompt</h1>
@@ -867,18 +889,18 @@ button:focus-visible {
 </div>
 <div class="example-card">
   <div class="ex-title">🎯 Esempio:</div>
-  <div class="ex-body">&quot;Spiega come preparare il caffè con la moka, passo per passo&quot;. Cosa aspettarsi:</div>
+  <div class="ex-body">&quot;Spiega come preparare il caffè con la moka, passo per passo&quot;. <br><strong>Cosa aspettarsi:</strong> Una lista numerata che parte dal riempire la moka fino a versare il caffè.</div>
 </div>
   </div>
 </div>
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Se è confusa, il prompt va migliorato.</li><li>•  La risposta è confusa → riscrivi il prompt più preciso</li><li>Stai già imparando una cosa importante, fare richieste chiare è una grande abilità, andiamo avanti con calma.</li></ul>
+  <ul><li>&quot;Sto spiegando a una persona che non vede quello che ho in testa&quot;</li><li>Quindi: di sempre qualcosa in più.</li></ul>
 </div>
 </div>
 
-<div class="slide" data-idx="56" role="region" aria-label="Slide 56 di 55" tabindex="0">
+<div class="slide" data-idx="56" role="region" aria-label="Slide 56 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 0.1</span>
     <h1 id="slide-title-56">Cos&#x27;è un prompt</h1>
@@ -895,7 +917,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="6" role="region" aria-label="Slide 6 di 55" tabindex="0">
+<div class="slide" data-idx="6" role="region" aria-label="Slide 6 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 1</span>
     <h1 id="slide-title-6">Aggiungere dettagli</h1>
@@ -917,22 +939,22 @@ button:focus-visible {
 </div>
 <div class="example-card">
   <div class="ex-title">🎯 Esempio finale:</div>
-  <div class="ex-body">&quot;Spiega come usare WhatsApp in modo semplice, per principiante&quot; Cosa aspettarsi:</div>
+  <div class="ex-body">&quot;Spiega come usare WhatsApp in modo semplice, per principiante&quot; <br><strong>Cosa aspettarsi:</strong> Una spiegazione che non usa termini tecnici e guida l'utente dai primi passi.</div>
 </div>
 <div class="example-card">
   <div class="ex-title">🎯 Esempio:</div>
-  <div class="ex-body">&quot;Spiega come inviare un&#x27;email, passo per passo, con elenco numerato&quot; Cosa aspettarsi:</div>
+  <div class="ex-body">&quot;Spiega come inviare un&#x27;email, passo per passo, con elenco numerato&quot; <br><strong>Cosa aspettarsi:</strong> Una sequenza chiara: 1. Apri mail, 2. Clicca Nuovo, ecc.</div>
 </div>
   </div>
 </div>
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>•  Usa parole più semplici</li><li>&quot;Spiega come usare WhatsApp in modo semplice, per principiante&quot;</li><li>•  usare parole semplici</li><li>Usa questa frase nella mente:</li></ul>
+  <ul><li><strong>Usa questa frase nella mente</strong><ul style='margin-top:6px;'><li>&quot;Più spiego, meglio ottengo&quot;</li></ul></li><li><strong>È come ordinare al ristorante</strong><ul style='margin-top:6px;'><li>se dice solo &quot;da mangiare&quot;, è difficile.</li><li>Se dice &quot;una pizza margherita ben cotta&quot;, arriva giusto.</li></ul></li></ul>
 </div>
 </div>
 
-<div class="slide" data-idx="57" role="region" aria-label="Slide 57 di 55" tabindex="0">
+<div class="slide" data-idx="57" role="region" aria-label="Slide 57 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 1.1</span>
     <h1 id="slide-title-57">Aggiungere dettagli</h1>
@@ -949,7 +971,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="58" role="region" aria-label="Slide 58 di 55" tabindex="0">
+<div class="slide" data-idx="58" role="region" aria-label="Slide 58 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 1.2</span>
     <h1 id="slide-title-58">Aggiungere dettagli</h1>
@@ -962,7 +984,7 @@ button:focus-visible {
 
 </div>
 
-<div class="slide" data-idx="9" role="region" aria-label="Slide 9 di 55" tabindex="0">
+<div class="slide" data-idx="9" role="region" aria-label="Slide 9 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 2</span>
     <h1 id="slide-title-9">Correggere e migliorare</h1>
@@ -1001,11 +1023,11 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>RICORDA:</li><li>Molto difficile da ricordare.</li><li>&quot;Nella risposta precedente, non ho capito cosa significa &#x27;fare clic&#x27;. Spiega meglio con un esempio&quot;</li><li>Usa queste frasi:</li></ul>
+  <ul><li><strong>Usa queste frasi</strong><ul style='margin-top:6px;'><li>&quot;Riprova, più semplice&quot;</li><li>&quot;Fai un esempio&quot;</li><li>&quot;Spiega passo passo&quot;</li><li>&quot;Per principiante&quot;</li><li>&quot;Più breve&quot;</li><li>&quot;Più dettagli su questo punto&quot;</li><li>Sono come istruzioni per guidare l&#x27;AI.</li></ul></li></ul>
 </div>
 </div>
 
-<div class="slide" data-idx="59" role="region" aria-label="Slide 59 di 55" tabindex="0">
+<div class="slide" data-idx="59" role="region" aria-label="Slide 59 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 2.1</span>
     <h1 id="slide-title-59">Correggere e migliorare</h1>
@@ -1030,7 +1052,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="60" role="region" aria-label="Slide 60 di 55" tabindex="0">
+<div class="slide" data-idx="60" role="region" aria-label="Slide 60 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 2.2</span>
     <h1 id="slide-title-60">Correggere e migliorare</h1>
@@ -1047,7 +1069,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="61" role="region" aria-label="Slide 61 di 55" tabindex="0">
+<div class="slide" data-idx="61" role="region" aria-label="Slide 61 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 2.3</span>
     <h1 id="slide-title-61">Correggere e migliorare</h1>
@@ -1060,7 +1082,7 @@ button:focus-visible {
 
 </div>
 
-<div class="slide" data-idx="13" role="region" aria-label="Slide 13 di 55" tabindex="0">
+<div class="slide" data-idx="13" role="region" aria-label="Slide 13 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 3</span>
     <h1 id="slide-title-13">Chiedere compiti specifici</h1>
@@ -1097,11 +1119,11 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Meglio:</li><li>Meglio:</li><li>Meglio:</li><li>Usa questa struttura nella mente:</li></ul>
+  <ul><li><strong>Usa questa struttura nella mente</strong><ul style='margin-top:6px;'><li>&quot;Fai [compito], per [destinatario], in [formato], tono [tipo], [lunghezza]&quot;</li></ul></li></ul>
 </div>
 </div>
 
-<div class="slide" data-idx="62" role="region" aria-label="Slide 62 di 55" tabindex="0">
+<div class="slide" data-idx="62" role="region" aria-label="Slide 62 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 3.1</span>
     <h1 id="slide-title-62">Chiedere compiti specifici</h1>
@@ -1126,7 +1148,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="63" role="region" aria-label="Slide 63 di 55" tabindex="0">
+<div class="slide" data-idx="63" role="region" aria-label="Slide 63 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 3.2</span>
     <h1 id="slide-title-63">Chiedere compiti specifici</h1>
@@ -1151,7 +1173,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="64" role="region" aria-label="Slide 64 di 55" tabindex="0">
+<div class="slide" data-idx="64" role="region" aria-label="Slide 64 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 3.3</span>
     <h1 id="slide-title-64">Chiedere compiti specifici</h1>
@@ -1176,7 +1198,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="65" role="region" aria-label="Slide 65 di 55" tabindex="0">
+<div class="slide" data-idx="65" role="region" aria-label="Slide 65 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 3.4</span>
     <h1 id="slide-title-65">Chiedere compiti specifici</h1>
@@ -1193,7 +1215,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="18" role="region" aria-label="Slide 18 di 55" tabindex="0">
+<div class="slide" data-idx="18" role="region" aria-label="Slide 18 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 4</span>
     <h1 id="slide-title-18">AI per la vita quotidiana</h1>
@@ -1230,11 +1252,11 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Ora usiamo l&#x27;AI per la vita quotidiana: *	ricette per cucinare *	idee per viaggi *	consigli per acquisti *	gestione della posta *	pianificazione di attività L&#x27;AI diventa un assistente pratico. Non sol</li><li>Meglio:</li><li>Meglio:</li><li>Meglio:</li></ul>
+  <ul><li><strong>Pensa sempre a 3 domande</strong><ul style='margin-top:6px;'><li>Cosa voglio fare?</li><li>Cosa ho già?</li><li>Come lo voglio?</li></ul></li><li><strong>E usa questa frase</strong><ul style='margin-top:6px;'><li>&quot;Dammi [cosa], con [dettagli], per [chi], in [formato]&quot;</li></ul></li></ul>
 </div>
 </div>
 
-<div class="slide" data-idx="66" role="region" aria-label="Slide 66 di 55" tabindex="0">
+<div class="slide" data-idx="66" role="region" aria-label="Slide 66 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 4.1</span>
     <h1 id="slide-title-66">AI per la vita quotidiana</h1>
@@ -1262,7 +1284,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="67" role="region" aria-label="Slide 67 di 55" tabindex="0">
+<div class="slide" data-idx="67" role="region" aria-label="Slide 67 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 4.2</span>
     <h1 id="slide-title-67">AI per la vita quotidiana</h1>
@@ -1290,7 +1312,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="68" role="region" aria-label="Slide 68 di 55" tabindex="0">
+<div class="slide" data-idx="68" role="region" aria-label="Slide 68 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 4.3</span>
     <h1 id="slide-title-68">AI per la vita quotidiana</h1>
@@ -1318,7 +1340,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="69" role="region" aria-label="Slide 69 di 55" tabindex="0">
+<div class="slide" data-idx="69" role="region" aria-label="Slide 69 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 4.4</span>
     <h1 id="slide-title-69">AI per la vita quotidiana</h1>
@@ -1343,7 +1365,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="23" role="region" aria-label="Slide 23 di 55" tabindex="0">
+<div class="slide" data-idx="23" role="region" aria-label="Slide 23 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 5</span>
     <h1 id="slide-title-23">Dialogo continuo con l&#x27;AI</h1>
@@ -1351,7 +1373,7 @@ button:focus-visible {
   
 <div class="card idea">
   <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
-  <ul><li>L&#x27;AI ricorda cosa è stato detto prima nella stessa conversazione.</li><li>Tu puoii dire:</li><li>&quot;Come dicevi prima...&quot;</li><li>&quot;Nel punto 2, non ho capito...&quot;</li></ul>
+  <ul><li>L&#x27;AI ricorda cosa è stato detto prima nella stessa conversazione.</li><li>Tu puoi dire:</li><li>&quot;Come dicevi prima...&quot;</li><li>&quot;Nel punto 2, non ho capito...&quot;</li></ul>
 </div>
   
   
@@ -1380,11 +1402,11 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Ora impariamo a parlare con l&#x27;AI come in un dialogo continuo. *	Correggere errori *	Ricordare cose dette prima *	Costruire una &quot;conversazione lunga&quot; *	Fare riferimento a risposte precedenti Questo ti </li><li>L&#x27;AI ricorda cosa è stato detto prima nella stessa conversazione.</li><li>•  L&#x27;AI ricorda il contesto</li><li>&quot;Nel punto 2, non ho capito cosa significa &#x27;File&#x27;. Spiega meglio&quot;</li></ul>
+  <ul><li><strong>Usa queste frasi come &quot;punti di riferimento&quot;</strong><ul style='margin-top:6px;'><li>&quot;Come dicevi prima...&quot;</li><li>&quot;Nel punto [numero]...&quot;</li><li>&quot;Riprova, ma...&quot;</li><li>&quot;C&#x27;è un errore, perché...&quot;</li><li>In questo modo l&#x27;AI capisce che sta continuando una conversazione.</li></ul></li></ul>
 </div>
 </div>
 
-<div class="slide" data-idx="70" role="region" aria-label="Slide 70 di 55" tabindex="0">
+<div class="slide" data-idx="70" role="region" aria-label="Slide 70 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 5.1</span>
     <h1 id="slide-title-70">Dialogo continuo con l&#x27;AI</h1>
@@ -1409,7 +1431,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="71" role="region" aria-label="Slide 71 di 55" tabindex="0">
+<div class="slide" data-idx="71" role="region" aria-label="Slide 71 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 5.2</span>
     <h1 id="slide-title-71">Dialogo continuo con l&#x27;AI</h1>
@@ -1434,7 +1456,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="72" role="region" aria-label="Slide 72 di 55" tabindex="0">
+<div class="slide" data-idx="72" role="region" aria-label="Slide 72 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 5.3</span>
     <h1 id="slide-title-72">Dialogo continuo con l&#x27;AI</h1>
@@ -1463,7 +1485,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="73" role="region" aria-label="Slide 73 di 55" tabindex="0">
+<div class="slide" data-idx="73" role="region" aria-label="Slide 73 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 5.4</span>
     <h1 id="slide-title-73">Dialogo continuo con l&#x27;AI</h1>
@@ -1488,7 +1510,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="28" role="region" aria-label="Slide 28 di 55" tabindex="0">
+<div class="slide" data-idx="28" role="region" aria-label="Slide 28 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 6</span>
     <h1 id="slide-title-28">AI per studiare e ripassare</h1>
@@ -1525,11 +1547,11 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Meglio:</li><li>Meglio:</li><li>Meglio:</li><li>Meglio:</li></ul>
+  <ul><li><strong>Usa questa struttura per studiare</strong><ul style='margin-top:6px;'><li>&quot;Spiegami [argomento] in modo semplice&quot;</li><li>&quot;Fammi 3 esempi&quot;</li><li>&quot;Fammi 5 domande quiz con soluzioni&quot;</li><li>&quot;Fai un riassunto in 5 punti&quot;</li><li>&quot;Crea una scheda di studio&quot;</li><li>In questo modo: capisce → fissa → verifica → ripassa.</li></ul></li></ul>
 </div>
 </div>
 
-<div class="slide" data-idx="74" role="region" aria-label="Slide 74 di 55" tabindex="0">
+<div class="slide" data-idx="74" role="region" aria-label="Slide 74 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 6.1</span>
     <h1 id="slide-title-74">AI per studiare e ripassare</h1>
@@ -1556,7 +1578,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="75" role="region" aria-label="Slide 75 di 55" tabindex="0">
+<div class="slide" data-idx="75" role="region" aria-label="Slide 75 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 6.2</span>
     <h1 id="slide-title-75">AI per studiare e ripassare</h1>
@@ -1583,7 +1605,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="76" role="region" aria-label="Slide 76 di 55" tabindex="0">
+<div class="slide" data-idx="76" role="region" aria-label="Slide 76 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 6.3</span>
     <h1 id="slide-title-76">AI per studiare e ripassare</h1>
@@ -1610,7 +1632,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="77" role="region" aria-label="Slide 77 di 55" tabindex="0">
+<div class="slide" data-idx="77" role="region" aria-label="Slide 77 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 6.4</span>
     <h1 id="slide-title-77">AI per studiare e ripassare</h1>
@@ -1640,7 +1662,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="78" role="region" aria-label="Slide 78 di 55" tabindex="0">
+<div class="slide" data-idx="78" role="region" aria-label="Slide 78 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge exercise">📝 Esercizio 6.5</span>
     <h1 id="slide-title-78">AI per studiare e ripassare</h1>
@@ -1669,7 +1691,7 @@ button:focus-visible {
 </div>
 </div>
 
-<div class="slide" data-idx="34" role="region" aria-label="Slide 34 di 55" tabindex="0">
+<div class="slide" data-idx="34" role="region" aria-label="Slide 34 di 96" tabindex="0">
   <div class="slide-header">
     <span class="level-badge">LIVELLO 7</span>
     <h1 id="slide-title-34">Scrivere testi con l&#x27;AI</h1>
@@ -1677,7 +1699,7 @@ button:focus-visible {
   
 <div class="card idea">
   <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
-  <ul><li>Per scrivere bene serve:</li><li>1.  Cosai scrivere (tipo di testo)</li><li>2.  Per chi è (destinatario)</li><li>3.  Tono (formale, gentile, amichevole)</li></ul>
+  <ul><li>Per scrivere bene serve:</li><li>1. Cosa scrivere (tipo di testo)</li><li>2. Per chi è (destinatario)</li><li>3. Tono (formale, gentile, amichevole)</li></ul>
 </div>
   
   
@@ -1706,7 +1728,7 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Meglio:</li><li>Meglio:</li><li>Meglio:</li><li>Meglio:</li></ul>
+  <ul><li><strong>Usa questa struttura nella mente</strong><ul style='margin-top:6px;'><li>&quot;Scrivi [tipo di testo], per [destinatario], tono [tipo], breve/media/lunga, in italiano, con [elementi specifici]&quot;</li></ul></li></ul>
 </div>
 </div>
 
@@ -1890,7 +1912,7 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Meglio:</li><li>&quot;Fammi un piano settimanale semplice per usare il computer 30 minuti al giorno, per principiante, con 5</li><li>Meglio:</li><li>Meglio:</li></ul>
+  <ul><li><strong>Usa questa struttura nella mente</strong><ul style='margin-top:6px;'><li>&quot;Organizza [cosa], con [vincoli], per [chi], con [risorse], dammi: [elenca di cose che vuole]&quot;</li></ul></li></ul>
 </div>
 </div>
 
@@ -2073,7 +2095,7 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>&quot;Quale telefono è meglio?&quot;</li><li>Meglio:</li><li>&quot;Quale banca è meglio?&quot;</li><li>Meglio:</li></ul>
+  <ul><li><strong>Usa questa struttura nella mente</strong><ul style='margin-top:6px;'><li>&quot;Confronta [opzioni], con [criteri], per [chi], con [vincoli], dammi: tabella, pro e contro, consiglio&quot;</li></ul></li></ul>
 </div>
 </div>
 
@@ -2205,7 +2227,7 @@ button:focus-visible {
   
 <div class="card consigli">
   <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
-  <ul><li>Un progetto reale usa:</li><li>contro e un consiglio&quot;</li><li>&quot;Nel punto 2, non ho capito il mezzo. Spiega meglio&quot;</li><li>Usa questo schema per ogni progetto:</li></ul>
+  <ul><li>Passo 4: Scrittura email (Livello 7)</li><li>&quot;Scrivi un&#x27;email formale al mio amico Luca, per invitarlo alla gita. Breve, in italiano, tono amichevole ma</li><li>rispettoso, con data, luogo, orario, mezzo di trasporto&quot;</li><li>Passo 5: Dialogo continuo (Livello 2-5)</li><li>&quot;Riprova l&#x27;email, ma più breve&quot;</li><li>&quot;Aggiungi anche il costo indicativo del biglietto&quot;</li><li>&quot;Nel punto 2, non ho capito il mezzo. Spiega meglio&quot;</li><li>Passo 6: Studio e ripasso (Livello 6)</li><li>&quot;Fammi 5 domande quiz su come organizzare una gita, con 3 opzioni di risposta ciascuna. Alla fine dammi le</li><li><strong>Usa questo schema per ogni progetto</strong><ul style='margin-top:6px;'><li>&quot;Spiega [argomento] in modo semplice&quot;</li><li>&quot;Confronta [opzioni] con [criteri]&quot;</li><li>&quot;Pianifica [attività]&quot;</li><li>&quot;Scrivi [testo] per [destinatario], tono [tipo]&quot;</li><li>&quot;Fammi quiz e riassunto&quot;</li><li>&quot;Crea una scheda di studio&quot;</li><li>&quot;Migliora con dialogo continuo&quot;</li></ul></li></ul>
 </div>
 </div>
 
@@ -2251,7 +2273,7 @@ button:focus-visible {
 </div>
 <nav id="nav">
   <button class="nav-btn" onclick="prev()" aria-label="Slide precedente (freccia sinistra)">‹</button>
-  <span id="counter">1 / 55</span>
+  <span id="counter">1 / 96</span>
   <button class="nav-btn" onclick="next()" aria-label="Slide successiva (freccia destra)">›</button>
   <span class="nav-sep" aria-hidden="true">•</span>
   <button class="nav-btn nav-btn-text" id="indice-btn" onclick="goTo(2)" aria-label="Vai all'indice del corso (tasto I)">
