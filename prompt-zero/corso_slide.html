@@ -1,0 +1,2626 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt Simple Engineering — Corso AI di Angelo Spanu</title>
+<style>
+:root {
+  --nero: #222222;
+  --bianco: #FFFFFF;
+  --bg: #4B4E6D;
+  --menta: #84DCC6;
+  --grigio: #95A3B3;
+  --card: rgba(255,255,255,0.07);
+  --card-border: rgba(255,255,255,0.16);
+  --text: #FFFFFF;
+  --text-muted: #C7CDD9;   /* grigio chiaro - AAA contrast su bg (#4B4E6D) */
+  --shadow: 0 12px 40px rgba(34,34,34,0.45);
+  --font-scale: 1;       /* moltiplicatore per tutte le dimensioni testo */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  background-attachment: fixed;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+  background-size: 36px 36px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: 56px 80px 100px 80px;
+  display: none;
+  flex-direction: column;
+  animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.slide.active { display: flex; }
+
+/* === ACCESSIBILITÀ WCAG 2.1 AA === */
+
+/* Skip link: visibile solo con focus tastiera, per screen reader e tastiera */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 24px;
+  background: var(--menta);
+  color: var(--nero);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  z-index: 9999;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 24px;
+  outline: 3px solid var(--bianco);
+  outline-offset: 2px;
+}
+
+/* Focus visibile su tutti gli elementi interattivi (WCAG 2.4.7) */
+:focus-visible {
+  outline: 3px solid var(--menta);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--menta);
+  outline-offset: 3px;
+}
+
+/* prefers-reduced-motion: disabilita animazioni per utenti sensibili */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Screen reader only: utility per testo invisibile ma accessibile */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* === ZOOM TESTO ===
+   Le regole di scaling vere e proprie sono alla FINE del CSS (vedi fondo)
+   con !important per vincere sulla cascata. Qui mettiamo solo il commento. */
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.slide-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid rgba(255,255,255,0.15);
+}
+
+.level-badge {
+  background: var(--menta);
+  color: var(--nero);
+  font-weight: 800;
+  padding: 12px 20px;
+  border-radius: 50px;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  box-shadow: 0 6px 20px rgba(132,220,198,0.30);
+  white-space: nowrap;
+}
+
+.level-badge.exercise {
+  background: var(--bianco);
+  color: var(--nero);
+  box-shadow: 0 6px 20px rgba(255,255,255,0.25);
+}
+
+.slide-header h1 {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(90deg, var(--bianco) 0%, var(--menta) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 6s linear infinite;
+}
+
+/* === CARD === */
+.card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 14px;
+  padding: 26px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 30px rgba(34,34,34,0.30);
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  height: auto;
+  min-height: min-content;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--menta);
+  pointer-events: none;
+}
+
+.card.idea::before { background: var(--bianco); }
+.card.esempi::before { background: var(--menta); }
+.card.consigli::before { background: var(--menta); opacity: 0.6; }
+.card.esercizio::before { background: var(--bianco); }
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(34,34,34,0.45);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--menta);
+}
+
+.card.idea .card-title { color: var(--bianco); }
+.card.esercizio .card-title { color: var(--bianco); }
+
+.card-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+
+.card ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* Sotto-liste annidate (usate in Consigli Pratici) */
+.card ul ul {
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-left: 22px;
+}
+
+.card ul ul li {
+  padding-left: 18px;
+  margin-bottom: 6px;
+  font-size: calc(15px * var(--font-scale)) !important;
+}
+
+.card ul ul li::before {
+  content: "◦";
+  color: var(--menta);
+  opacity: 0.7;
+}
+
+.card li {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.card li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--menta);
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.card p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.card p strong {
+  color: var(--menta);
+}
+
+/* === ESERCIZIO STRUTTURATO === */
+.ex-header {
+  background: var(--bianco);
+  color: var(--nero);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 6px 20px rgba(255,255,255,0.20);
+}
+
+.ex-num {
+  background: var(--nero);
+  color: var(--menta);
+  font-weight: 900;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 18px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.ex-titolo {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--nero);
+}
+
+.ex-section {
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid var(--menta);
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.ex-section.scopo { border-left-color: var(--bianco); background: rgba(255,255,255,0.08); }
+.ex-section.aspettarsi { border-left-color: var(--menta); }
+.ex-section.verificare { border-left-color: var(--grigio); }
+
+.ex-section strong {
+  color: var(--menta);
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.ex-section.scopo strong { color: var(--bianco); }
+
+.ex-section ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ex-section li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 6px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.ex-section li::before {
+  content: "•";
+  position: absolute;
+  left: 6px;
+  top: 0;
+  color: var(--menta);
+  font-weight: bold;
+}
+
+.ex-section p {
+  margin: 4px 0;
+  color: var(--text);
+}
+
+/* === GRIGLIA ESEMPI === */
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  overflow: hidden;
+}
+
+.example-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(132,220,198,0.25);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s;
+  height: auto;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.example-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--menta);
+  box-shadow: 0 10px 30px rgba(132,220,198,0.20);
+}
+
+.example-card .ex-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--menta);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.example-card .ex-body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* === COPERTINA === */
+.cover {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.cover .logo {
+  font-size: 120px;
+  margin-bottom: 24px;
+  animation: float 4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(132,220,198,0.30));
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.cover h1 {
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  margin-bottom: 18px;
+  background: linear-gradient(135deg, var(--bianco) 0%, var(--menta) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cover .subtitle {
+  font-size: 22px;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+  font-weight: 300;
+  max-width: 700px;
+}
+
+.cover .lead {
+  font-size: 17px;
+  color: var(--text-muted);
+  max-width: 700px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.cover .author {
+  font-size: 16px;
+  color: var(--nero);
+  margin-top: 40px;
+  padding: 14px 32px;
+  background: var(--menta);
+  border-radius: 50px;
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* === INDICE === */
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.toc-item {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toc-item:hover {
+  background: rgba(132,220,198,0.18);
+  border-color: var(--menta);
+  transform: translateX(6px);
+  box-shadow: 0 6px 20px rgba(132,220,198,0.20);
+}
+
+.toc-num {
+  background: var(--menta);
+  color: var(--nero);
+  font-weight: 800;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.toc-num.ex {
+  background: var(--bianco);
+  border: 2px solid var(--menta);
+}
+
+.toc-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* === NAV === */
+#nav {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(34,34,34,0.85);
+  padding: 12px 22px;
+  border-radius: 50px;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.15);
+  z-index: 100;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  pointer-events: auto;
+}
+
+.nav-btn {
+  background: var(--menta);
+  color: var(--nero);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(132,220,198,0.30);
+}
+
+.nav-btn:hover { transform: scale(1.15); }
+.nav-btn:active { transform: scale(0.95); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+#counter {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: calc(80px * var(--font-scale));
+  text-align: center;
+  font-weight: 600;
+}
+
+.nav-sep {
+  color: var(--grigio);
+  opacity: 0.5;
+  margin: 0 4px;
+  user-select: none;
+}
+
+.nav-btn-text {
+  width: auto;
+  padding: 0 16px;
+  border-radius: 22px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn-label { font-size: calc(13px * var(--font-scale)) !important; }
+.nav-btn-text { font-size: calc(13px * var(--font-scale)) !important; }
+
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: var(--menta);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 100;
+}
+
+/* === ZOOM CONTROLS === */
+#zoom-controls {
+  position: fixed;
+  top: 22px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(34,34,34,0.85);
+  padding: 6px 10px;
+  border-radius: 22px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+}
+
+.zoom-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.zoom-btn:hover {
+  background: var(--menta);
+  color: var(--nero);
+  border-color: var(--menta);
+  transform: scale(1.1);
+}
+
+.zoom-btn:active { transform: scale(0.95); }
+
+#zoom-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  min-width: calc(40px * var(--font-scale));
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+#print-btn {
+  position: fixed;
+  top: 22px;
+  right: 24px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.20);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 22px;
+  cursor: pointer;
+  font-size: 13px;
+  z-index: 100;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+  font-weight: 600;
+}
+
+#print-btn:hover {
+  background: var(--menta);
+  color: var(--nero);
+  transform: translateY(-2px);
+}
+
+#kbd-hint {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+  z-index: 99;
+  pointer-events: none;
+}
+
+/* === ZOOM TESTO ===
+   REGOLE DI SCALING: devono essere alla FINE del CSS, con !important,
+   per vincere sulla cascata. Usa la CSS variable --font-scale (default 1)
+   per scalare proporzionalmente tutti i font-size delle slide. */
+#counter { font-size: calc(13px * var(--font-scale)) !important; }
+#zoom-label { font-size: calc(12px * var(--font-scale)) !important; }
+.zoom-btn { font-size: calc(16px * var(--font-scale)) !important; }
+#print-btn { font-size: calc(13px * var(--font-scale)) !important; }
+#kbd-hint { font-size: calc(11px * var(--font-scale)) !important; }
+.slide { font-size: calc(16px * var(--font-scale)) !important; }
+.slide-header h1 { font-size: calc(36px * var(--font-scale)) !important; }
+.cover h1 { font-size: calc(72px * var(--font-scale)) !important; }
+.cover .subtitle { font-size: calc(22px * var(--font-scale)) !important; }
+.cover .lead { font-size: calc(17px * var(--font-scale)) !important; }
+.cover .author { font-size: calc(16px * var(--font-scale)) !important; }
+.card-title { font-size: calc(20px * var(--font-scale)) !important; }
+.card-icon { font-size: calc(28px * var(--font-scale)) !important; }
+.card li { font-size: calc(16px * var(--font-scale)) !important; }
+.card p { font-size: calc(16px * var(--font-scale)) !important; }
+.ex-titolo { font-size: calc(22px * var(--font-scale)) !important; }
+.ex-num { font-size: calc(18px * var(--font-scale)) !important; }
+.ex-section { font-size: calc(15px * var(--font-scale)) !important; }
+.ex-section strong { font-size: calc(13px * var(--font-scale)) !important; }
+.ex-section li { font-size: calc(15px * var(--font-scale)) !important; }
+.example-card .ex-title { font-size: calc(15px * var(--font-scale)) !important; }
+.example-card .ex-body { font-size: calc(14px * var(--font-scale)) !important; }
+.level-badge { font-size: calc(14px * var(--font-scale)) !important; }
+.toc-num { font-size: calc(13px * var(--font-scale)) !important; }
+.toc-label { font-size: calc(14px * var(--font-scale)) !important; }
+/* padding/border-radius non scalati (altrimenti il layout esplode) */
+
+@media print {
+  #nav, #print-btn, #progress-bar, #zoom-controls, #kbd-hint, #indice-btn, .nav-sep { display: none !important; }
+  body::before { display: none; }
+  body { background: white !important; color: var(--nero) !important; overflow: visible !important; }
+  .slide {
+    position: relative !important;
+    display: flex !important;
+    page-break-after: always;
+    height: 100vh;
+    background: white !important;
+    color: var(--nero) !important;
+    padding: 40px !important;
+  }
+  .slide-header h1 { color: var(--nero) !important; -webkit-text-fill-color: var(--nero) !important; background: none !important; }
+  .level-badge { background: var(--menta) !important; color: var(--nero) !important; box-shadow: none !important; }
+  .level-badge.exercise { background: var(--bianco) !important; color: var(--nero) !important; border: 2px solid var(--nero) !important; }
+  .card { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: var(--nero) !important; box-shadow: none !important; }
+  .card::before { background: var(--menta) !important; }
+  .card.idea::before, .card.esercizio::before { background: var(--nero) !important; }
+  .card.consigli::before { background: var(--grigio) !important; }
+  .card-title { color: var(--bg) !important; }
+  .card.idea .card-title, .card.esercizio .card-title { color: var(--nero) !important; }
+  .card li, .card p { color: var(--nero) !important; }
+  .card li::before { color: var(--menta) !important; }
+  .card p strong { color: var(--bg) !important; }
+  .example-card { background: #f8fafc !important; border: 1px solid var(--menta) !important; }
+  .example-card .ex-title { color: var(--bg) !important; }
+  .example-card .ex-body { color: var(--nero) !important; }
+  .ex-header { background: var(--bianco) !important; border: 2px solid var(--nero) !important; box-shadow: none !important; }
+  .ex-titolo { color: var(--nero) !important; }
+  .ex-num { background: var(--nero) !important; color: var(--menta) !important; }
+  .ex-section { background: #f8fafc !important; color: var(--nero) !important; border-color: var(--menta) !important; }
+  .ex-section.scopo { border-left-color: var(--nero) !important; background: #f1f5f9 !important; }
+  .ex-section.aspettarsi { border-left-color: var(--menta) !important; }
+  .ex-section.verificare { border-left-color: var(--grigio) !important; }
+  .ex-section strong { color: var(--bg) !important; }
+  .ex-section.scopo strong { color: var(--nero) !important; }
+  .ex-section li { color: var(--nero) !important; }
+  .ex-section li::before { color: var(--menta) !important; }
+  .ex-section p { color: var(--nero) !important; }
+  .cover h1 { color: var(--nero) !important; -webkit-text-fill-color: var(--nero) !important; background: none !important; }
+  .cover .subtitle, .cover .lead { color: var(--bg) !important; }
+  .cover .author { background: var(--menta) !important; color: var(--nero) !important; border: none !important; }
+  .toc-item { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; }
+  .toc-item:hover { background: #f8fafc !important; }
+  .toc-num { background: var(--menta) !important; color: var(--nero) !important; }
+  .toc-num.ex { background: var(--bianco) !important; border: 2px solid var(--nero) !important; }
+  .toc-label { color: var(--nero) !important; }
+}
+</style>
+</head>
+<body>
+<a href="#slide-active" class="skip-link" id="skip-link">Salta al contenuto</a>
+<div id="progress-bar"></div>
+<div id="zoom-controls" role="group" aria-label="Controlli dimensione testo">
+  <button class="zoom-btn" onclick="zoomOut()" aria-label="Diminuisci dimensione testo" title="Diminuisci testo (tasto -)">A-</button>
+  <span id="zoom-label" aria-live="polite" aria-atomic="true">100%</span>
+  <button class="zoom-btn" onclick="zoomIn()" aria-label="Aumenta dimensione testo" title="Aumenta testo (tasto +)">A+</button>
+  <button class="zoom-btn" onclick="zoomReset()" aria-label="Ripristina dimensione testo" title="Reset (tasto 0)" style="font-size:12px;">↺</button>
+</div>
+<button id="print-btn" onclick="window.print()" aria-label="Stampa o esporta come PDF">🖨️ Stampa / PDF</button>
+<div id="deck">
+
+<div class="slide cover active" data-idx="1" role="region" aria-labelledby="slide-1-title">
+  <div class="logo">🤖</div>
+  <h1 id="slide-1-title">Prompt Simple Engineering</h1>
+  <div class="subtitle">Guida Pratica all'uso dell'Intelligenza Artificiale per Principianti</div>
+  <div class="lead">
+    Un corso a livelli: dal primo prompt fino a un progetto completo, con esempi di vita quotidiana, studio e lavoro.
+  </div>
+  <div class="author">📚 Dott. Angelo Spanu · @2026</div>
+</div>
+
+<div class="slide" data-idx="2" role="region" aria-label="Slide 2 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">🗂️ INDICE</span>
+    <h1 id="slide-title-2">Cosa vedremo insieme</h1>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="card-icon">🎮</span> Un videogioco a livelli</div>
+    <p style="font-size:18px;line-height:1.7;">
+      Ogni livello aggiunge una piccola abilità. Alla fine del corso saprai parlare con un'AI come si parla con un assistente molto veloce: chiaro, con esempi, correggendo quando serve.
+    </p>
+    <p style="font-size:16px;line-height:1.7;margin-top:14px;color:var(--text-muted);">
+      💡 Le slide con <span style="color:var(--bianco);font-weight:bold;">bordo bianco</span> sono esercizi pratici — sono il cuore del corso.
+    </p>
+  </div>
+  <div class="toc-grid">
+    
+<div class="toc-item" onclick="goTo(3)">
+  <div class="toc-num">📘</div>
+  <div class="toc-label">Introduzione al Corso</div>
+</div>
+<div class="toc-item" onclick="goTo(4)">
+  <div class="toc-num">0</div>
+  <div class="toc-label">Livello 0 - Cos&#x27;è un prompt</div>
+</div>
+<div class="toc-item" onclick="goTo(6)">
+  <div class="toc-num">1</div>
+  <div class="toc-label">Livello 1 - Aggiungere dettagli</div>
+</div>
+<div class="toc-item" onclick="goTo(9)">
+  <div class="toc-num">2</div>
+  <div class="toc-label">Livello 2 - Correggere e migliorare</div>
+</div>
+<div class="toc-item" onclick="goTo(13)">
+  <div class="toc-num">3</div>
+  <div class="toc-label">Livello 3 - Chiedere compiti specifici</div>
+</div>
+<div class="toc-item" onclick="goTo(18)">
+  <div class="toc-num">4</div>
+  <div class="toc-label">Livello 4 - AI per la vita quotidiana</div>
+</div>
+<div class="toc-item" onclick="goTo(23)">
+  <div class="toc-num">5</div>
+  <div class="toc-label">Livello 5 - Dialogo continuo con l&#x27;AI</div>
+</div>
+<div class="toc-item" onclick="goTo(28)">
+  <div class="toc-num">6</div>
+  <div class="toc-label">Livello 6 - AI per studiare e ripassare</div>
+</div>
+<div class="toc-item" onclick="goTo(34)">
+  <div class="toc-num">7</div>
+  <div class="toc-label">Livello 7 - Scrivere testi con l&#x27;AI</div>
+</div>
+<div class="toc-item" onclick="goTo(41)">
+  <div class="toc-num">8</div>
+  <div class="toc-label">Livello 8 - Organizzare e pianificare</div>
+</div>
+<div class="toc-item" onclick="goTo(47)">
+  <div class="toc-num">9</div>
+  <div class="toc-label">Livello 9 - Confrontare e decidere</div>
+</div>
+<div class="toc-item" onclick="goTo(52)">
+  <div class="toc-num">10</div>
+  <div class="toc-label">Livello 10 - Progetto completo che unisce tutti i livelli</div>
+</div>
+  </div>
+</div>
+
+<div class="slide" data-idx="3" role="region" aria-label="Slide 3 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">📘 INTRO</span>
+    <h1 id="slide-title-3">Introduzione al Corso</h1>
+  </div>
+  <div class="card idea">
+    <div class="card-title"><span class="card-icon">🎯</span> L'obiettivo reale</div>
+    <p style="font-size:19px;line-height:1.7;">
+      Non è "imparare i prompt". Imparare a <strong>parlare bene con un'AI</strong> per ottenere quello che vuoi.
+    </p>
+    <p style="font-size:16px;line-height:1.7;margin-top:14px;color:var(--text-muted);">
+      Come un videogioco a livelli: ogni capitolo aggiunge una piccola abilità.
+    </p>
+  </div>
+    <div class="card">
+    <div class="card-title"><span class="card-icon">💡</span> Cosa ti serve</div>
+    <ul><li>Un account su un'AI (come ChatGPT, Claude o Gemini)</li><li>Un dispositivo connesso a internet</li><li>La curiosità di sperimentare e sbagliare per imparare</li></ul>
+  </div>
+</div>
+
+<div class="slide" data-idx="4" role="region" aria-label="Slide 4 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 0</span>
+    <h1 id="slide-title-4">Cos&#x27;è un prompt</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <ul><li>L&#x27;obiettivo è semplice:</li><li>1.  Dire cosa vuoi</li><li>2.  Dirlo in modo chiaro</li><li>3.  Ottenere una risposta utile</li></ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio semplice</div>
+  <div class="ex-body">Prompt poco chiaro: &quot;Parlami di cucina&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio:</div>
+  <div class="ex-body">&quot;Spiega come preparare il caffè con la moka, passo per passo&quot;. <br><strong>Cosa aspettarsi:</strong> Una lista numerata che parte dal riempire la moka fino a versare il caffè.</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <ul><li>&quot;Sto spiegando a una persona che non vede quello che ho in testa&quot;</li><li>Quindi: di sempre qualcosa in più.</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="5" role="region" aria-label="Slide 5 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 0.1</span>
+    <h1 id="slide-title-56">Cos&#x27;è un prompt</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 0.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Scegli qualcosa che ti interessa</li><li>Scrivi una richiesta semplice</li><li>Aggiungi un dettaglio (es: "passo per passo")</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <ul><li>Una risposta ordinata e chiara</li><li>I passaggi sono facili da seguire</li><li>L'argomento è preciso</li></ul>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>La risposta è comprensibile?</li><li>È completa?</li><li>È facile da seguire?</li></ul>
+  <p style="margin-top:6px;font-size:13px;color:var(--text-muted);">Se è confusa, il prompt va migliorato.</p>
+</div>
+</div>
+</div>
+
+<div class="slide" data-idx="6" role="region" aria-label="Slide 6 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 1</span>
+    <h1 id="slide-title-6">Aggiungere dettagli</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <ul><li>Un buon prompt ha 3 parti:</li><li>1.  Cosa vuoi</li><li>2.  Come lo vuoi</li><li>3.  Per chi è</li></ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio chiaro</div>
+  <div class="ex-body">Prompt base: &quot;Spiega il computer&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio finale:</div>
+  <div class="ex-body">&quot;Spiega come usare WhatsApp in modo semplice, per principiante&quot; <br><strong>Cosa aspettarsi:</strong> Una spiegazione che non usa termini tecnici e guida l'utente dai primi passi.</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio:</div>
+  <div class="ex-body">&quot;Spiega come inviare un&#x27;email, passo per passo, con elenco numerato&quot; <br><strong>Cosa aspettarsi:</strong> Una sequenza chiara: 1. Apri mail, 2. Clicca Nuovo, ecc.</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <ul><li><strong>Usa questa frase nella mente</strong><ul style='margin-top:6px;'><li>&quot;Più spiego, meglio ottengo&quot;</li></ul></li><li><strong>È come ordinare al ristorante</strong><ul style='margin-top:6px;'><li>se dice solo &quot;da mangiare&quot;, è difficile.</li><li>Se dice &quot;una pizza margherita ben cotta&quot;, arriva giusto.</li></ul></li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="7" role="region" aria-label="Slide 7 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 1.1</span>
+    <h1 id="slide-title-57">Aggiungere dettagli</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 1.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Scrivi una richiesta semplice</li><li>Aggiungi "in modo semplice"</li><li>Aggiungi "per principiante"</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <ul><li>Una spiegazione semplice, con parole facili</li><li>Esempi pratici che aiutano a capire</li><li>Nessun termine tecnico senza spiegazione</li></ul>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Usa parole semplici?</li><li>Ci sono esempi pratici?</li><li>Si capisce subito?</li></ul>
+</div>
+</div>
+</div>
+
+<div class="slide" data-idx="8" role="region" aria-label="Slide 8 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 1.2</span>
+    <h1 id="slide-title-58">Aggiungere dettagli</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 1.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Scrivi: "Spiega cos'è un computer in modo semplice, per una persona che inizia da zero, con esempi pratici"</li><li>Leggi la risposta</li><li>Verifica che sia semplice e abbia esempi</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una spiegazione semplice con esempi pratici, senza parole tecniche.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Usa parole semplici?</li><li>Ha esempi pratici?</li><li>Si capisce subito?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="9" role="region" aria-label="Slide 9 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 2</span>
+    <h1 id="slide-title-9">Correggere e migliorare</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <p>Spesso la prima risposta non è perfetta. Puoi correggerla come se parlassi con una persona: dici &quot;più chiaro&quot;, &quot;più breve&quot;, &quot;più semplice&quot;.</p>
+  <p style="margin-top:10px;"><strong>Non accettare subito la prima risposta.</strong></p>
+  <ul style="margin-top:5px;">
+    <li>&quot;Riprova, ma più semplice&quot;</li>
+    <li>&quot;Più breve&quot;</li>
+    <li>&quot;Fai un esempio&quot;</li>
+    <li>&quot;Spiega come se avessi 12 anni&quot;</li>
+  </ul>
+</div>
+  
+<div class="card esercizio">
+  <div class="card-title" style="color: var(--bianco);">
+    <span class="card-icon">📝</span> Esercizi disponibili
+  </div>
+  <p>Questo livello ha <strong>3</strong> esercizi pratici. Vai alle slide successive per metterti alla prova.</p>
+</div>
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio: correggere la complessità</div>
+  <div class="ex-body">Richiesta: &quot;Cosa è un computer?&quot; <br>Prima risposta: &quot;Un dispositivo elettronico programmabile che elabora dati tramite operazioni logiche...&quot; <br><strong style="color:var(--menta);">Nuovo Prompt:</strong> &quot;Riprova, ma in modo semplice, per una persona che non sa nulla dei computer&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio: aggiungere realtà</div>
+  <div class="ex-body">&quot;Spiega cos'è un'email, con un esempio pratico della vita reale&quot; <br><strong style="color:var(--menta);">Cosa aspettarsi:</strong> Una spiegazione che paragona l'email a una lettera, ma più veloce.</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Esempio: chiarire termini</div>
+  <div class="ex-body">&quot;Nella risposta precedente, non ho capito cosa significa 'fare clic'. Spiega meglio con un esempio&quot;</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <p>Usa queste frasi per guidare l'AI:</p>
+  <ul style="margin-top:10px;">
+    <li>&quot;Riprova, più semplice&quot;</li>
+    <li>&quot;Fai un esempio&quot;</li>
+    <li>&quot;Spiega passo passo&quot;</li>
+    <li>&quot;Per principiante&quot;</li>
+    <li>&quot;Più breve&quot;</li>
+    <li>&quot;Più dettagli su questo punto&quot;</li>
+  </ul>
+  <p style="margin-top:10px; font-size:14px; color:var(--text-muted);">Cosa fare se la risposta è ancora lunga? → scrivi &quot;Più breve&quot;. Se manca un esempio? → scrivi &quot;Fammi un esempio&quot;.</p>
+</div>
+</div>
+
+<div class="slide" data-idx="10" role="region" aria-label="Slide 10 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 2.1</span>
+    <h1 id="slide-title-59">Correggere e migliorare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 2.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Chiedi qualcosa (es: &quot;Cos&#x27;è internet?&quot;)</li><li>Leggi la risposta</li><li>Se è difficile, scrivi:</li><li>&quot;Riprova, ma in modo semplice, per principiante&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una spiegazione più facile.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Parole comuni</li><li>Frasi brevi</li><li>Niente parole tecniche senza spiegazione</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="11" role="region" aria-label="Slide 11 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 2.2</span>
+    <h1 id="slide-title-60">Correggere e migliorare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 2.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Fammi un esempio pratico&quot;</li><li>Oppure:</li><li>&quot;Spiega con un esempio della vita reale&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una spiegazione con un esempio chiaro e concreto.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>C'è un esempio vero?</li><li>L'esempio è semplice?</li><li>Si capisce subito?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="12" role="region" aria-label="Slide 12 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 2.3</span>
+    <h1 id="slide-title-61">Correggere e migliorare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 2.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;">
+    <li>Chiedi all'AI di spiegare un concetto (es. &quot;Come funziona il cloud?&quot;)</li>
+    <li>Se la risposta contiene parole difficili, scrivi:</li>
+    <li>&quot;Non ho capito questo punto, spiegamelo meglio con un esempio della vita reale&quot;</li>
+  </ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>L'AI deve semplificare solo la parte che non avevi capito, aggiungendo un esempio concreto.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>L'esempio è facile da capire?</li><li>La spiegazione è più semplice della precedente?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="13" role="region" aria-label="Slide 13 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 3</span>
+    <h1 id="slide-title-13">Chiedere compiti specifici</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <p>Ora impariamo a chiedere all'AI di fare cose concrete: scrivere email, preparare guide, fare riassunti e creare liste. Questo ti fa risparmiare tempo e ti dà risultati pronti all'uso.</p>
+  <p style="margin-top:10px;"><strong>Per ogni compito serve:</strong></p>
+  <ul style="margin-top:5px;">
+    <li><strong>Cosa:</strong> il compito (es. email, riassunto, guida)</li>
+    <li><strong>Per chi:</strong> il destinatario (es. tuo capo, tuo amico, principiante)</li>
+    <li><strong>Come:</strong> il formato, il tono e la lunghezza (es. breve, gentile, formale)</li>
+  </ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Scrivere un'email</div>
+  <div class="ex-body">Prompt base: &quot;Scrivi un'email&quot;<br>Prompt migliore: &quot;Scrivi un'email gentile al mio medico, per chiedere un appuntamento la prossima settimana. Breve, in italiano, tono rispettoso&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Fare un riassunto</div>
+  <div class="ex-body">Prompt: &quot;Fai un riassunto di questo testo: [incolla il testo]&quot;<br>Meglio: &quot;Fai un riassunto breve di questo testo, in 3 frasi, in modo semplice, per principiante: [incolla il testo]&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Creare una guida</div>
+  <div class="ex-body">Prompt: &quot;Crea una guida passo passo per inviare un'email&quot;<br>Meglio: &quot;Crea una guida passo passo per inviare un'email, per principiante, con elenco numerato, spiegando ogni passaggio in modo semplice&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Creare una lista</div>
+  <div class="ex-body">Prompt: &quot;Fammi una lista di cose da fare per prepararmi per una visita medica&quot;<br>Meglio: &quot;Fammi una lista di 5 cose da fare per prepararmi per una visita medica, in ordine, con elenco puntato&quot;</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <p>Usa questa struttura nella mente per ogni richiesta:</p>
+  <p style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px; text-align:center; font-weight:bold; color:var(--menta);">
+    &quot;Fai [compito], per [destinatario], in [formato], tono [tipo], [lunghezza]&quot;
+  </p>
+  <ul style="margin-top:10px;">
+    <li>Risposta troppo lunga? → scrivi &quot;Più breve&quot;</li>
+    <li>Mancano passaggi? → scrivi &quot;Aggiungi altri passaggi&quot;</li>
+    <li>Tono sbagliato? → scrivi &quot;Tono più gentile&quot; o &quot;formale&quot;</li>
+    <li>Non in italiano? → scrivi &quot;In italiano&quot;</li>
+  </ul>
+</div>
+</div>
+
+<div class="slide" data-idx="14" role="region" aria-label="Slide 14 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 3.1</span>
+    <h1 id="slide-title-62">Chiedere compiti specifici</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 3.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Scrivi un&#x27;email gentile al mio amico Marco, per invitarlo a bere un caffè sabato pomeriggio. Breve, in italiano,</li><li>tono amichevole&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Un testo di email pronto da copiare e incollare.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>È gentile</li><li>È breve</li><li>Contiene invito, giorno, attività</li><li>Se manca qualcosa, scrivi:</li><li>&quot;Riprova, ma aggiungi anche l&#x27;orario&quot;</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="15" role="region" aria-label="Slide 15 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 3.2</span>
+    <h1 id="slide-title-63">Chiedere compiti specifici</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 3.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Prendi un testo breve (es: un&#x27;email, un articolo)</li><li>Incollielo dopo i due punti</li><li>Scrivi:</li><li>&quot;Fai un riassunto breve di questo testo, in 3 frasi, in modo semplice: [testo]&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>3 frasi che spiegano il testo.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>È breve</li><li>Si capisce il contenuto</li><li>Non ci sono parole difficili</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="16" role="region" aria-label="Slide 16 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 3.3</span>
+    <h1 id="slide-title-64">Chiedere compiti specifici</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 3.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Crea una guida passo passo per usare WhatsApp al telefono, per principiante, con elenco numerato,</li><li>spiegando ogni passaggio in modo semplice&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una lista ordinata: 1, 2, 3...</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Ci sono i numeri</li><li>Ogni passaggio è chiaro</li><li>Niente salti logici</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="17" role="region" aria-label="Slide 17 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 3.4</span>
+    <h1 id="slide-title-65">Chiedere compiti specifici</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 3.4</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;">
+    <li>&quot;Fammi una lista di 5 cose da ricordare quando uso il computer per la prima volta, con elenco puntato, in modo semplice&quot;</li>
+  </ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una lista di 5 punti chiari, utili per un principiante assoluto, senza termini tecnici.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>C'è l'elenco puntato?</li><li>I consigli sono semplici?</li><li>Sono esattamente 5?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="18" role="region" aria-label="Slide 18 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 4</span>
+    <h1 id="slide-title-18">AI per la vita quotidiana</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <p>L'AI diventa un assistente pratico per ogni giorno: ricette, viaggi, acquisti e organizzazione. Non più solo spiegazioni, ma aiuti reali per risolvere problemi quotidiani.</p>
+  <p style="margin-top:10px;"><strong>Per ogni situazione servono 3 informazioni:</strong></p>
+  <ul style="margin-top:5px;">
+    <li><strong>Cosa:</strong> cosa vuoi fare (es. una cena, una gita)</li>
+    <li><strong>Cosa hai:</strong> risorse a disposizione (ingredienti, tempo, budget)</li>
+    <li><strong>Come:</strong> il formato desiderato (breve, semplice, dettagliato)</li>
+  </ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Cucina Intelligente</div>
+  <div class="ex-body">Prompt base: &quot;Dammi una ricetta&quot;<br>Meglio: &quot;Dammi una ricetta semplice con pollo, pomodoro e pasta, per 2 persone, in 30 minuti, passo passo, per principiante&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Viaggi e Gite</div>
+  <div class="ex-body">Prompt base: &quot;Dammi idee per una gita&quot;<br>Meglio: &quot;Dammi 5 idee per una gita di un giorno partendo da Oristano, per una persona anziana, con poco cammino, in Sardegna, con posti storici e panoramici&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Consigli Acquisti</div>
+  <div class="ex-body">Prompt base: &quot;Quale telefono compro?&quot;<br>Meglio: &quot;Dammi 3 consigli per comprare uno smartphone semplice, per una persona anziana, con grande schermo, facile da usare, budget 200 euro&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Gestione Posta</div>
+  <div class="ex-body">Prompt base: &quot;Come gestisco la posta?&quot;<br>Meglio: &quot;Dammi una guida passo passo per gestire la posta elettronica, per principiante, con elenco numerato, spiegando come aprire, leggere, rispondere e chiudere un'email&quot;</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <p>Prima di scrivere, fatti queste 3 domande:</p>
+  <ul style="margin-top:10px;">
+    <li>1. Cosa voglio fare?</li>
+    <li>2. Cosa ho già a disposizione?</li>
+    <li>3. Come voglio che sia la risposta?</li>
+  </ul>
+  <p style="margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px; text-align:center; font-weight:bold; color:var(--menta);">
+    &quot;Dammi [cosa], con [dettagli], per [chi], in [formato]&quot;
+  </p>
+  <p style="margin-top:10px; font-size:14px; color:var(--text-muted);">Se l'idea è troppo difficile? → scrivi &quot;più semplice&quot;. Troppo lontana? → scrivi &quot;più vicina a [città]&quot;.</p>
+</div>
+</div>
+
+<div class="slide" data-idx="19" role="region" aria-label="Slide 19 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 4.1</span>
+    <h1 id="slide-title-66">AI per la vita quotidiana</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 4.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Dammi una ricetta semplice con patate, uova e formaggio, per 2 persone, in 30 minuti, passo passo, per</li><li>principiante&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una ricetta completa:
+*	ingredienti
+*	passaggi ordinati
+*	tempi</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Ingredienti semplici</li><li>Passaggi chiari</li><li>Tempo indicato</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="20" role="region" aria-label="Slide 20 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 4.2</span>
+    <h1 id="slide-title-67">AI per la vita quotidiana</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 4.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Dammi 5 idee per una gita di un giorno partendo da [tua città], per una persona anziana, con poco cammino,</li><li>con posti storici e panoramici&quot;</li><li>Sostituisci [tua città] con la tua città reale.</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una lista di 5 posti con:
+*	nome
+*	cosa vedere
+*	perché è adatto</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I posti sono vicini</li><li>Non richiedono molto cammino</li><li>Sono interessanti</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="21" role="region" aria-label="Slide 21 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 4.3</span>
+    <h1 id="slide-title-68">AI per la vita quotidiana</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 4.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Dammi 3 consigli per comprare un computer portatile semplice, per una persona anziana, con schermo</li><li>grande, facile da usare, budget 500 euro&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>3 opzioni con:
+*	modello (o tipo)
+*	perché è adatto
+*	prezzo indicativo</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I consigli sono semplici</li><li>Il prezzo è nel budget</li><li>Sono adatti a principianti</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="22" role="region" aria-label="Slide 22 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 4.4</span>
+    <h1 id="slide-title-69">AI per la vita quotidiana</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 4.4</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Dammi una routine quotidiana semplice per usare il computer 30 minuti al giorno, per principiante, con 5</li><li>attività utili (es: leggere email, cercare informazioni, scrivere una nota)&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una lista di 5 attività ordinate.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Le attività sono semplici</li><li>Durano poco</li><li>Sono utili</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="23" role="region" aria-label="Slide 23 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 5</span>
+    <h1 id="slide-title-23">Dialogo continuo con l&#x27;AI</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <p>L'AI ricorda cosa è stato detto prima nella stessa conversazione. Questo ti permette di lavorare su un progetto passo dopo passo, senza dover ricominciare da capo ogni volta.</p>
+  <p style="margin-top:10px;"><strong>Puoi interagire usando riferimenti:</strong></p>
+  <ul style="margin-top:5px;">
+    <li>&quot;Come dicevi prima...&quot;</li>
+    <li>&quot;Nel punto 2, non ho capito...&quot;</li>
+    <li>&quot;Riprova la ricetta, ma senza formaggio&quot;</li>
+    <li>&quot;Aggiungi un altro dettaglio a quello che abbiamo deciso&quot;</li>
+  </ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi di dialogo</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Correggere un dettaglio</div>
+  <div class="ex-body"><strong>Prima:</strong> &quot;Dammi una ricetta con pollo, pomodoro e pasta&quot; <br><strong>Dopo:</strong> &quot;Riprova la ricetta, ma senza formaggio e con meno sale&quot; <br><span style="color:var(--menta);font-size:12px;">L'AI modifica solo gli ingredienti senza riscrivere tutto da zero.</span></div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Approfondire un punto</div>
+  <div class="ex-body">L'AI ha spiegato 3 passaggi. <br><strong>Tu scrivi:</strong> &quot;Nel punto 2, non ho capito cosa significa 'File'. Spiega meglio con un esempio&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Costruire un progetto</div>
+  <div class="ex-body"><strong>Passo 1:</strong> &quot;Dammi 5 idee per una gita in Sardegna&quot; <br><strong>Passo 2:</strong> &quot;Scegli la terza idea e dammi un itinerario dettagliato&quot; <br><strong>Passo 3:</strong> &quot;Ora aggiungi i costi indicativi&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Gestire l'errore</div>
+  <div class="ex-body">Se l'AI sbaglia: &quot;Credo che ci sia un errore. Prima hai detto X, ora Y. Qual è corretto?&quot; oppure &quot;Questo non ha senso. Spiega meglio perché...&quot;</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <p>Usa queste frasi come &quot;punti di riferimento&quot; per non perdere il filo:</p>
+  <ul style="margin-top:10px;">
+    <li>&quot;Come dicevi prima...&quot;</li>
+    <li>&quot;Nel punto [numero]...&quot;</li>
+    <li>&quot;Riprova, ma...&quot;</li>
+    <li>&quot;C&#x27;è un errore, perché...&quot;</li>
+  </ul>
+  <p style="margin-top:10px; font-size:14px; color:var(--text-muted);">Cosa fare se l'AI dimentica? → Riscrivi brevemente il contesto: &quot;Prima abbiamo parlato di...&quot;</p>
+</div>
+</div>
+
+<div class="slide" data-idx="24" role="region" aria-label="Slide 24 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 5.1</span>
+    <h1 id="slide-title-70">Dialogo continuo con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 5.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Chiedi una ricetta (es: &quot;Dammi una ricetta con patate e uova&quot;)</li><li>Leggi la risposta</li><li>Scrivi:</li><li>&quot;Riprova la ricetta, ma senza cipolla e con meno olio&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>La stessa ricetta, modificata come chiede.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Manca la cipolla</li><li>C&#x27;è meno olio</li><li>Il resto è uguale</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="25" role="region" aria-label="Slide 25 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 5.2</span>
+    <h1 id="slide-title-71">Dialogo continuo con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 5.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Chiedi una guida passo passo (es: &quot;Come inviare un&#x27;email&quot;)</li><li>Leggi la risposta</li><li>Scegli un passaggio che non capisce</li><li>Scrivi:</li><li>&quot;Nel punto [numero], non ho capito [cosa]. Spiega meglio con un esempio&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una spiegazione più chiara di quel passaggio.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Spiega solo quel punto</li><li>Usa parole semplici</li><li>Fa un esempio</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="26" role="region" aria-label="Slide 26 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 5.3</span>
+    <h1 id="slide-title-72">Dialogo continuo con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 5.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Passo 1:</li><li>&quot;Dammi 3 idee per una cena semplice per 4 persone&quot;</li><li>Passo 2:</li><li>&quot;Scegli la seconda idea e dammi la lista della spesa&quot;</li><li>Passo 3:</li><li>&quot;Ora aggiungi anche i tempi di preparazione&quot;</li><li>Passo 4:</li><li>&quot;Riprova la lista, ma senza prodotti costosi&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una cena completa con:
+*	menu
+*	lista della spesa
+*	tempi
+*	prezzo contenuto</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Tutto è coerente</li><li>Niente contraddizioni</li><li>Il prezzo è ragionevole</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="27" role="region" aria-label="Slide 27 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 5.4</span>
+    <h1 id="slide-title-73">Dialogo continuo con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 5.4</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Chiedi qualcosa (es: &quot;Come si accende il computer&quot;)</li><li>Se la risposta è strana o errata, scrivi:</li><li>&quot;Questo non mi sembra corretto. Spiega meglio come si accende un computer, passo passo&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una spiegazione corretta e chiara.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I passaggi sono giusti</li><li>Sono in ordine</li><li>Sono semplici</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="28" role="region" aria-label="Slide 28 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 6</span>
+    <h1 id="slide-title-28">AI per studiare e ripassare</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <p>L'AI non è solo un assistente, ma un tutor personale. Ti permette di studiare qualsiasi cosa con spiegazioni lente, quiz per verificare e riassunti per fissare i concetti.</p>
+  <p style="margin-top:10px;"><strong>Il ciclo di studio efficace:</strong></p>
+  <ul style="margin-top:5px;">
+    <li><strong>Spiegazione:</strong> per capire il concetto.</li>
+    <li><strong>Esempi:</strong> per fissare l'idea nella mente.</li>
+    <li><strong>Quiz:</strong> per verificare se hai capito davvero.</li>
+    <li><strong>Riassunto:</strong> per ripassare velocemente.</li>
+  </ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi di studio</div>
+  <div class="examples-grid">
+<div class="example-card">
+  <div class="ex-title">🎯 Spiegare concetti</div>
+  <div class="ex-body">Prompt: &quot;Spiegami cos'è il Cloud in modo semplice, per principiante, con 3 esempi pratici della vita reale&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Verificare con Quiz</div>
+  <div class="ex-body">Prompt: &quot;Fammi 5 domande semplici su come usare WhatsApp, con 3 opzioni di risposta ciascuna. Alla fine dammi le soluzioni spiegate&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Correggere errori</div>
+  <div class="ex-body">Tu scrivi: &quot;Ho risposto così alla domanda 3: [tua risposta]. È corretta? Se no, spiegami perché e dammi la risposta giusta&quot;</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Riassumere e Schematizzare</div>
+  <div class="ex-body">Prompt: &quot;Fai un riassunto breve di questo argomento, in 5 punti chiave, in modo semplice, per principiante&quot;</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <p>Segui questo ordine per imparare qualsiasi cosa nuova:</p>
+  <ol style="margin-top:10px;">
+    <li>&quot;Spiegami [argomento] in modo semplice&quot;</li>
+    <li>&quot;Fammi 3 esempi concreti&quot;</li>
+    <li>&quot;Fammi un quiz di 5 domande con soluzioni&quot;</li>
+    <li>&quot;Fai un riassunto in 5 punti chiave&quot;</li>
+    <li>&quot;Crea una scheda di studio con definizione, punti chiave ed errori comuni&quot;</li>
+  </ol>
+  <p style="margin-top:10px; font-size:14px; color:var(--text-muted);">Concetto troppo difficile? → scrivi &quot;Spiega ancora più semplice&quot;. Quiz troppo facile? → scrivi &quot;Fai domande un po' più difficili&quot;.</p>
+</div>
+</div>
+
+<div class="slide" data-idx="29" role="region" aria-label="Slide 29 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 6.1</span>
+    <h1 id="slide-title-74">AI per studiare e ripassare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 6.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Scegli un concetto che non capisce bene (es: &quot;email&quot;, &quot;internet&quot;, &quot;cloud&quot;).</li><li>&quot;Spiega [concetto] in modo semplice, per principiante, con 3 esempi pratici della vita reale&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>*	Una definizione semplice
+*	3 esempi chiari
+*	Niente parole difficili senza spiegazione</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Capisce il concetto</li><li>Gli esempi sono concreti</li><li>Le parole sono semplici</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="30" role="region" aria-label="Slide 30 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 6.2</span>
+    <h1 id="slide-title-75">AI per studiare e ripassare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 6.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Fammi 5 domande semplici su come usare WhatsApp, con 3 opzioni di risposta ciascuna. Alla fine dammi le</li><li>soluzioni spiegate&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>*	5 domande
+*	3 opzioni per domanda
+*	Risposte corrette con spiegazione</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Le domande sono chiare</li><li>Le opzioni sono plausibili</li><li>Le spiegazioni sono utili</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="31" role="region" aria-label="Slide 31 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 6.3</span>
+    <h1 id="slide-title-76">AI per studiare e ripassare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 6.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Risponda a una domanda del quiz</li><li>Se non è sicuro, scrivi:</li><li>&quot;Ho risposto così: [la tua risposta]. È corretta? Se no, spiegami perché e dammi la risposta giusta&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>*	Verifica della risposta
+*	Spiegazione dell&#x27;errore
+*	Risposta corretta</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Capisce perché ha sbagliato</li><li>Capisce la risposta giusta</li><li>Ricorda meglio per il futuro</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="32" role="region" aria-label="Slide 32 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 6.4</span>
+    <h1 id="slide-title-77">AI per studiare e ripassare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 6.4</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Fai un riassunto breve su come inviare un&#x27;email, in 5 punti chiave, in modo semplice, per principiante, con</li><li>parole comuni&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>5 punti chiari:
+1.	Apri il programma
+2.	Scrivi il destinatario
+3.	Scrivi l&#x27;oggetto
+4.	Scrivi il messaggio
+5.	Clicca su Invia</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I punti sono in ordine</li><li>Sono semplici</li><li>Coprono tutto il processo</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="33" role="region" aria-label="Slide 33 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 6.5</span>
+    <h1 id="slide-title-78">AI per studiare e ripassare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 6.5</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Crea una scheda di studio su WhatsApp, con: definizione semplice, 3 punti chiave, 3 esempi, 2 errori comuni</li><li>da evitare&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una scheda ordinata con:
+*	definizione
+*	punti chiave
+*	esempi
+*	errori comuni</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>È completa</li><li>È semplice</li><li>È facile da ripassare</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="34" role="region" aria-label="Slide 34 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 7</span>
+    <h1 id="slide-title-34">Scrivere testi con l&#x27;AI</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <ul><li>Per scrivere bene serve:</li><li>1. Cosa scrivere (tipo di testo)</li><li>2. Per chi è (destinatario)</li><li>3. Tono (formale, gentile, amichevole)</li><li>4. Lunghezza (breve, media, lunga)</li></ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Lettera formale al medico</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Scrivi una lettera formale al mio medico, per chiedere un appuntamento la prossima settimana. Breve, in italiano, tono rispettoso, con nome e cognome, data e firma"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Messaggio informale a un amico</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Scrivi un messaggio informale e amichevole al mio amico Marco, per invitarlo a bere un caffè sabato pomeriggio alle 16. Breve, in italiano"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Email di lavoro al capo</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Scrivi un'email formale al mio capo, per chiedere un giorno di permesso mercoledì prossimo. Breve, in italiano, tono rispettoso, con oggetto chiaro"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Relazione semplice</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Scrivi una relazione semplice su una visita medica, con: data, medico, motivo, cosa è stato detto, consigli ricevuti. In italiano, tono neutro, 10-12 righe"</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <ul><li><strong>Usa questa struttura nella mente</strong><ul style='margin-top:6px;'><li>"Scrivi [tipo di testo], per [destinatario], tono [tipo], breve/media/lunga, in italiano, con [elementi specifici]"</li></ul></li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="35" role="region" aria-label="Slide 35 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 7.1</span>
+    <h1 id="slide-title-79">Scrivere testi con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 7.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Scrivi una lettera formale al mio medico, Dott. Rossi, per chiedere un appuntamento per una visita di</li><li>controllo. Breve, in italiano, tono rispettoso. Inserisci: nome e cognome, data, firma&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una lettera pronta con:
+*	oggetto
+*	saluto formale
+*	richiesta chiara
+*	dati personali
+*	saluto finale</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Il tono è formale</li><li>È breve</li><li>Contiene tutti i dati</li><li>Può copiare e incollare, poi modificare nome e data.</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="36" role="region" aria-label="Slide 36 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 7.2</span>
+    <h1 id="slide-title-80">Scrivere testi con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 7.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Scrivi un messaggio informale e amichevole alla mia amica Anna, per invitarla a cena da me venerdì sera alle</li><li>Breve, in italiano&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Un messaggio caldo e semplice.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Il tono è amichevole</li><li>È breve</li><li>Contiene giorno, ora, attività</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="37" role="region" aria-label="Slide 37 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 7.3</span>
+    <h1 id="slide-title-81">Scrivere testi con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 7.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Scrivi un&#x27;email formale al mio capo, Dott. Bianchi, per chiedere un giorno di permesso mercoledì 10 giugno.</li><li>Breve, in italiano, tono rispettoso. Inserisci: oggetto chiaro, saluto formale, motivo breve, saluto finale&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Un&#x27;email professionale e corretta.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Oggetto chiaro</li><li>Tono rispettoso</li><li>Motivazione breve ma chiara</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="38" role="region" aria-label="Slide 38 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 7.4</span>
+    <h1 id="slide-title-82">Scrivere testi con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 7.4</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Scrivi una relazione semplice su una gita in Sardegna, con: data, luogo, cosa abbiamo visto, cosa è piaciuto,</li><li>cosa cambierei. In italiano, tono neutro, 10-12 righe&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una relazione ordinata con:
+*	introduzione
+*	descrizione
+*	giudizio
+*	suggerimento</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>È ordinata</li><li>È chiara</li><li>Non è troppo lunga</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="39" role="region" aria-label="Slide 39 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 7.5</span>
+    <h1 id="slide-title-83">Scrivere testi con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 7.5</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Scrivi un messaggio di auguri di compleanno per mio nipote, tono affettuoso, breve, in italiano, con un</li><li>incoraggiamento per il suo futuro&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Un messaggio caldo e affettuoso, adatto a un nipote.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Il tono è affettuoso?</li><li>Contiene un incoraggiamento?</li><li>È breve?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="40" role="region" aria-label="Slide 40 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 7.6</span>
+    <h1 id="slide-title-84">Scrivere testi con l&#x27;AI</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 7.6</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Scrivi un messaggio di scuse alla mia amica Giulia, per essere arrivato in ritardo all&#x27;appuntamento. Tono</li><li>sincero, breve, in italiano&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Un messaggio di scuse sincero e diretto.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Il tono è sincero?</li><li>Spiega il motivo del ritardo?</li><li>È breve e diretto?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="41" role="region" aria-label="Slide 41 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 8</span>
+    <h1 id="slide-title-41">Organizzare e pianificare</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <ul><li>Per pianificare bene serve:</li><li>1. Cosa organizzare</li><li>2. Tempo a disposizione</li><li>3. Risorse (soldi, persone, materiali)</li><li>4. Ordine (priorità, passaggi)</li></ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Piano settimanale</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Fammi un piano settimanale semplice per usare il computer 30 minuti al giorno, per principiante, con 5 attività utili (email, ricerca, scrittura, foto, video)"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Lista cose da fare</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Fammi una lista di 10 cose da fare per prepararmi per una visita medica, in ordine, con elenco puntato, per principiante"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Organizzare un pranzo</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Organizza un pranzo semplice per 6 persone, budget 60 euro, con antipasto, primo, secondo, verdura, frutta, bevande. Dammi: menu, lista della spesa, tempi"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Progetto gita</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Pianifica una gita di un giorno da Oristano a Cagliari, per una persona anziana, con poco cammino, con treno, con visita a 2 luoghi storici"</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <ul><li><strong>Usa questa struttura nella mente</strong><ul style='margin-top:6px;'><li>"Organizza [cosa], con [vincoli], per [chi], con [risorse], dammi: [cosa vuoi]"</li></ul></li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="42" role="region" aria-label="Slide 42 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 8.1</span>
+    <h1 id="slide-title-85">Organizzare e pianificare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 8.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Fammi un piano settimanale semplice per 4 settimane, per imparare a usare WhatsApp, per principiante. Ogni</li><li>settimana un obiettivo piccolo, con 3 attività pratiche&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>4 settimane con:
+*	obiettivo settimanale
+*	3 attività per settimana
+*	progressione graduale</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Gli obiettivi sono piccoli</li><li>Le attività sono pratiche</li><li>La progressione è lenta</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="43" role="region" aria-label="Slide 43 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 8.2</span>
+    <h1 id="slide-title-86">Organizzare e pianificare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 8.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Fammi una lista di 10 cose da fare per prepararmi per un viaggio di un giorno in treno, in ordine, con elenco</li><li>puntato, per principiante&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una lista ordinata:
+1.	Prenotare il biglietto
+2.	Controllare l&#x27;orario
+3.	Preparare il documento
+4.	...</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I passaggi sono in ordine</li><li>Sono completi</li><li>Sono semplici</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="44" role="region" aria-label="Slide 44 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 8.3</span>
+    <h1 id="slide-title-87">Organizzare e pianificare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 8.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Organizza una cena semplice per 4 persone, budget 40 euro, con antipasto, primo, dessert. Dammi: menu,</li><li>lista della spesa, tempi di preparazione&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>*	Menu completo
+*	Lista della spesa
+*	Tempi di preparazione</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Il budget è rispettato</li><li>Il menu è semplice</li><li>I tempi sono realistici</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="45" role="region" aria-label="Slide 45 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 8.4</span>
+    <h1 id="slide-title-88">Organizzare e pianificare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 8.4</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Pianifica una gita di un giorno da [tua città] a [città vicina], per una persona anziana, con poco cammino, con</li><li>mezzo pubblico, con visita a 2-3 luoghi interessanti. Dammi: itinerario, orari indicativi, costi indicativi, consigli</li><li>pratici&quot;</li><li>Sostituisci [tua città] e [città vicina].</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>*	Itinerario chiaro
+*	Orari indicativi
+*	Costi indicativi
+*	Consigli pratici</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>È fattibile</li><li>Non richiede molto cammino</li><li>È adatto a una persona anziana</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="46" role="region" aria-label="Slide 46 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 8.5</span>
+    <h1 id="slide-title-89">Organizzare e pianificare</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 8.5</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Ho queste idee per migliorare la mia giornata: leggere 10 minuti al giorno, camminare 20 minuti, usare il</li><li>computer 30 minuti, scrivere un diario. Organizzale in: obiettivi, passaggi, tempi, risorse necessarie, possibili</li><li>problemi&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una struttura ordinata con:
+*	obiettivi
+*	passaggi
+*	tempi
+*	risorse
+*	problemi possibili</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>È chiaro cosa fare</li><li>È realistico</li><li>Tiene conto dei problemi</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="47" role="region" aria-label="Slide 47 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 9</span>
+    <h1 id="slide-title-47">Confrontare e decidere</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <ul><li>Per confrontare bene serve:</li><li>1. Quali opzioni confrontare</li><li>2. Criteri importanti (prezzo, qualità, facilità)</li><li>3. Vincoli (budget, tempo, esigenze)</li><li>4. Formato (tabella, lista, testo)</li></ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempi pratici</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">🎯 Confrontare telefoni</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Confronta 3 smartphone per una persona anziana, con: prezzo, schermo grande, facilità d'uso, batteria lunga. Budget 200 euro. Dammi tabella con pro e contro"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Confrontare servizi</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Confronta 3 banche per una persona anziana, con: costi, facilità online banking, sportelli vicini, assistenza. Dammi tabella con pro e contro"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Scelte importanti</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Devo scegliere tra due case: Casa A (150.000€, centro, 70 mq, 2 piano no ascensore) e Casa B (180.000€, periferia, 90 mq, 1 piano con ascensore). Per anziano. Confrontale con prezzo, posizione, dimensioni, accessibilità"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">🎯 Confrontare ricette</div>
+  <div class="ex-body"><strong>Meglio:</strong> "Devo scegliere tra due ricette: A (patate e uova, 30 min, 10€) e B (pollo e verdure, 45 min, 15€). Per 2 persone. Confrontale con tempo, costo, difficoltà"</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Consigli Pratici</div>
+  <ul><li><strong>Usa questa struttura nella mente</strong><ul style='margin-top:6px;'><li>"Confronta [opzioni], con [criteri], per [chi], con [vincoli], dammi: tabella, pro e contro, consiglio"</li></ul></li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="48" role="region" aria-label="Slide 48 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 9.1</span>
+    <h1 id="slide-title-90">Confrontare e decidere</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 9.1</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Confronta 3 computer portatili per una persona anziana, con: prezzo, schermo grande, facilità d&#x27;uso, peso</li><li>leggero. Budget 500 euro. Dammi una tabella con pro e contro per ogni modello&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una tabella con:
+*	3 modelli
+*	prezzo
+*	pro
+*	contro
+*	consiglio finale</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I criteri sono chiari</li><li>I pro e contro sono utili</li><li>Il consiglio è ragionevole</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="49" role="region" aria-label="Slide 49 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 9.2</span>
+    <h1 id="slide-title-91">Confrontare e decidere</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 9.2</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Confronta 3 assicurazioni sanitarie per una persona anziana, con: prezzo, coperture principali, esclusione</li><li>comuni, assistenza, rete di medici. Dammi una tabella con pro e contro&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una tabella chiara con:
+*	3 assicurazioni
+*	criteri importanti
+*	pro e contro
+*	consiglio</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I criteri utili sono inclusi</li><li>I pro e contro sono reali</li><li>Il consiglio è pratico</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="50" role="region" aria-label="Slide 50 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 9.3</span>
+    <h1 id="slide-title-92">Confrontare e decidere</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 9.3</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Devo scegliere tra due opzioni: Opzione A [descrive brevemente] e Opzione B [descrive brevemente]. Per [tua</li><li>situazione]. Confrontale con: [criteri]. Dammi pro e contro e un consiglio&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>*	Confronto chiaro
+*	Pro e contro per ogni opzione
+*	Consiglio finale</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I criteri sono giusti per te</li><li>I pro e contro sono realistici</li><li>Il consiglio tiene conto delle tue esigenze</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="51" role="region" aria-label="Slide 51 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 9.4</span>
+    <h1 id="slide-title-93">Confrontare e decidere</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 9.4</div>
+  <div class="ex-titolo">Mettiti alla prova</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>&quot;Devo scegliere tra due gite: Gita A (Cagliari, treno, 2 ore, 10 euro, molto cammino) e Gita B (Oristano</li><li>campagna, auto, 1 ora, 5 euro, poco cammino). Per una persona anziana. Confrontale con: tempo, costo,</li><li>cammino, interesse. Dammi pro e contro e un consiglio&quot;</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Un confronto chiaro con pro, contro e consiglio finale.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I criteri sono tutti considerati?</li><li>Il consiglio tiene conto delle esigenze?</li><li>I pro e contro sono realistici?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="52" role="region" aria-label="Slide 52 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge">LIVELLO 10</span>
+    <h1 id="slide-title-52">Progetto completo che unisce tutti i livelli</h1>
+  </div>
+  
+<div class="card idea">
+  <div class="card-title"><span class="card-icon">💡</span> Idea Chiave</div>
+  <ul><li>Un progetto reale usa tutti i livelli:</li><li>1. Prompt chiaro (Livello 0-1)</li><li>2. Dialogo continuo (Livello 2-5)</li><li>3. Studio e ripasso (Livello 6)</li><li>4. Scrittura testi (Livello 7)</li><li>5. Organizzazione (Livello 8)</li><li>6. Confronto e decisioni (Livello 9)</li></ul>
+</div>
+  
+  
+<div class="card esempi">
+  <div class="card-title"><span class="card-icon">🎯</span> Esempio: preparare una gita</div>
+  <div class="examples-grid">
+    
+<div class="example-card">
+  <div class="ex-title">Passo 1: Prompt chiaro</div>
+  <div class="ex-body">"Dammi 5 idee per una gita di un giorno da Oristano, per una persona anziana, con poco cammino, in Sardegna, con posti storici e panoramici"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">Passo 2: Confronto</div>
+  <div class="ex-body">"Confronta le 3 migliori gite con: tempo di viaggio, costo, cammino, interesse. Dammi tabella, pro e contro, consiglio"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">Passo 3: Pianificazione</div>
+  <div class="ex-body">"Pianifica la gita consigliata: itinerario, orari indicativi, costi indicativi, consigli pratici"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">Passo 4: Scrittura</div>
+  <div class="ex-body">"Scrivi un'email formale al mio amico Luca, per invitarlo alla gita. Breve, in italiano, tono amichevole ma rispettoso"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">Passo 5: Dialogo</div>
+  <div class="ex-body">"Riprova l'email, ma più breve" / "Aggiungi il costo del biglietto" / "Nel punto 2, spiega meglio il mezzo"</div>
+</div>
+<div class="example-card">
+  <div class="ex-title">Passo 6: Studio</div>
+  <div class="ex-body">"Fammi 5 domande quiz su come organizzare una gita, con 3 opzioni ciascuna. Alla fine dammi le soluzioni spiegate"</div>
+</div>
+  </div>
+</div>
+  
+<div class="card consigli">
+  <div class="card-title"><span class="card-icon">✅</span> Schema per ogni progetto</div>
+  <ul><li><strong>Usa questa sequenza:</strong><ul style='margin-top:6px;'>
+<li>"Spiega [argomento] in modo semplice"</li>
+<li>"Confronta [opzioni] con [criteri]"</li>
+<li>"Pianifica [attività]"</li>
+<li>"Scrivi [testo] per [destinatario], tono [tipo]"</li>
+<li>"Fammi quiz e riassunto"</li>
+<li>"Crea una scheda di studio"</li>
+<li>"Migliora con dialogo continuo"</li>
+</ul></li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="53" role="region" aria-label="Slide 53 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 10.1</span>
+    <h1 id="slide-title-94">Progetto completo che unisce tutti i livelli</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 10.1</div>
+  <div class="ex-titolo">Progetto completo: imparare a usare WhatsApp</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Istruzioni - Passo 1: Prompt chiaro</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Spiegami cos'è WhatsApp in modo semplice, per principiante, con 3 esempi pratici"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 2: Pianificazione</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Fammi un piano settimanale semplice per 4 settimane per imparare a usare WhatsApp, ogni settimana un obiettivo con 3 attività"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 3: Studio e verifica</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Fammi 5 domande quiz su WhatsApp con 3 opzioni ciascuna, con soluzioni spiegate"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 4: Dialogo continuo</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>Se un passaggio non è chiaro: "Nel punto X, non ho capito. Spiega meglio con un esempio"</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Un percorso completo: spiegazione, piano, quiz, miglioramenti continui.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Hai capito cos'è WhatsApp?</li><li>Hai un piano da seguire?</li><li>Il quiz ha verificato le conoscenze?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="54" role="region" aria-label="Slide 54 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 10.2</span>
+    <h1 id="slide-title-95">Progetto completo che unisce tutti i livelli</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 10.2</div>
+  <div class="ex-titolo">Progetto completo: preparare una cena</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Passo 1: Prompt chiaro</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Dammi 3 idee per una cena semplice per 4 persone con budget 40 euro"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 2: Confronto</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Confronta le 3 idee con: costo, difficoltà, tempo. Dammi pro e contro"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 3: Pianificazione</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Pianifica la cena scelta: menu, lista della spesa, tempi di preparazione"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 4: Dialogo</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Riprova la lista della spesa, ma senza prodotti costosi"</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una cena completa: idee, confronto, menu, lista spesa, tempi.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>Il menu è nel budget?</li><li>I tempi sono realistici?</li><li>La lista della spesa è completa?</li></ul>
+</div>
+</div>
+
+<div class="slide" data-idx="55" role="region" aria-label="Slide 55 di 55" tabindex="0">
+  <div class="slide-header">
+    <span class="level-badge exercise">📝 Esercizio 10.3</span>
+    <h1 id="slide-title-55">Progetto completo che unisce tutti i livelli</h1>
+  </div>
+  
+<div class="ex-header">
+  <div class="ex-num">Esercizio 10.3</div>
+  <div class="ex-titolo">Progetto completo: scegliere un computer</div>
+</div>
+
+<div class="ex-section">
+  <strong>📋 Passo 1: Prompt chiaro</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Dammi 3 consigli per comprare un computer portatile semplice, per persona anziana, schermo grande, budget 500 euro"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 2: Confronto</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Confronta i 3 computer con: prezzo, schermo, facilità, peso. Dammi tabella, pro e contro, consiglio"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 3: Studio</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Fammi 5 domande quiz su come usare un computer, con 3 opzioni e soluzioni spiegate"</li></ol>
+</div>
+<div class="ex-section">
+  <strong>📋 Passo 4: Riassunto finale</strong>
+  <ol style="padding-left:20px;line-height:1.7;"><li>"Fai un riassunto in 5 punti su come scegliere un computer per principiante"</li></ol>
+</div>
+<div class="ex-section aspettarsi">
+  <strong>👀 Cosa aspettarsi</strong>
+  <p>Una scelta consapevole: consigli, confronto, studio, riassunto.</p>
+</div>
+<div class="ex-section verificare">
+  <strong>🔍 Come verificare</strong>
+  <ul><li>I computer sono adatti a un principiante?</li><li>Il confronto è chiaro?</li><li>Hai capito cosa cercare?</li></ul>
+</div>
+</div>
+
+</div>
+<nav id="nav">
+  <button class="nav-btn" onclick="prev()" aria-label="Slide precedente (freccia sinistra)">‹</button>
+  <span id="counter">1 / 55</span>
+  <button class="nav-btn" onclick="next()" aria-label="Slide successiva (freccia destra)">›</button>
+  <span class="nav-sep" aria-hidden="true">•</span>
+  <button class="nav-btn nav-btn-text" id="indice-btn" onclick="goTo(2)" aria-label="Vai all'indice del corso (tasto I)">
+    <span aria-hidden="true">📑</span>
+    <span class="nav-btn-label">Indice</span>
+  </button>
+</nav>
+<div id="kbd-hint">← → · + − 0 · I · Home/End</div>
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 1;
+
+// === ZOOM TESTO ===
+const ZOOM_MIN = 0.7;
+const ZOOM_MAX = 1.6;
+const ZOOM_STEP = 0.1;
+let fontScale = 1;
+try { fontScale = parseFloat(localStorage.getItem('corso_font_scale')) || 1; } catch(e) {}
+
+function applyZoom() {
+  document.documentElement.style.setProperty('--font-scale', fontScale);
+  const label = document.getElementById('zoom-label');
+  if (label) label.textContent = Math.round(fontScale * 100) + '%';
+  try { localStorage.setItem('corso_font_scale', fontScale); } catch(e) {}
+}
+
+function zoomIn() {
+  fontScale = Math.min(ZOOM_MAX, +(fontScale + ZOOM_STEP).toFixed(2));
+  applyZoom();
+}
+function zoomOut() {
+  fontScale = Math.max(ZOOM_MIN, +(fontScale - ZOOM_STEP).toFixed(2));
+  applyZoom();
+}
+function zoomReset() {
+  fontScale = 1;
+  applyZoom();
+}
+
+function show(n) {
+  if (n < 1 || n > total) return;
+  slides.forEach(s => s.classList.remove('active'));
+  current = n;
+  slides[current - 1].classList.add('active');
+  document.getElementById('counter').textContent = current + ' / ' + total;
+  document.getElementById('progress-bar').style.width = (current / total * 100) + '%';
+  slides[current - 1].scrollTop = 0;
+}
+
+function next() { show(Math.min(current + 1, total)); }
+function prev() { show(Math.max(current - 1, 1)); }
+function goTo(n) { show(n); }
+
+document.addEventListener('keydown', e => {
+  // Scorciatoie zoom (non attive se l'utente sta scrivendo in un input)
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomIn(); return; }
+  if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomOut(); return; }
+  if (e.key === '0') { e.preventDefault(); zoomReset(); return; }
+  if (e.key === 'i' || e.key === 'I') { e.preventDefault(); goTo(2); return; }
+
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); next(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+  else if (e.key === ' ') { e.preventDefault(); next(); }
+  else if (e.key === 'Home') { show(1); }
+  else if (e.key === 'End') { show(total); }
+});
+
+show(1);
+applyZoom();
+</script>
+</body>
+</html>
